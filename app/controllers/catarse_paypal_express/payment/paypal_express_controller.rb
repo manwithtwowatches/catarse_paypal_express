@@ -52,11 +52,12 @@ module CatarsePaypalExpress::Payment
     def pay
       backer = current_user.backs.find params[:id]
       begin
+        binding.pry
         response = @@gateway.setup_purchase(backer.price_in_cents, {
           ip: request.remote_ip,
           return_url: payment_success_paypal_express_url(id: backer.id),
           cancel_return_url: payment_cancel_paypal_express_url(id: backer.id),
-          currency_code: 'BRL',
+          currency_code: backer.project.currency.code,
           description: t('paypal_description', scope: SCOPE, :project_name => backer.project.name, :value => backer.display_value),
           notify_url: payment_notifications_paypal_express_url(id: backer.id)
         })
@@ -93,7 +94,7 @@ module CatarsePaypalExpress::Payment
           backer.update_attribute :payment_id, details.params['transaction_id']
         end
         paypal_flash_success
-        redirect_to main_app.project_backer_path(project_id: backer.project.id, id: backer.id)
+        redirect_to main_app.project_path(id: backer.project.id)
       rescue Exception => e
         ::Airbrake.notify({ :error_class => "Paypal Error", :error_message => "Paypal Error: #{e.message}", :parameters => params}) rescue nil
         Rails.logger.info "-----> #{e.inspect}"
