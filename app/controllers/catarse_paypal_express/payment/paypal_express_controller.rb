@@ -52,7 +52,6 @@ module CatarsePaypalExpress::Payment
     def pay
       backer = current_user.backs.find params[:id]
       begin
-        binding.pry
         response = @@gateway.setup_purchase(backer.price_in_cents, {
           ip: request.remote_ip,
           return_url: payment_success_paypal_express_url(id: backer.id),
